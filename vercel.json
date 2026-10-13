@@ -2,48 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/index.py": {
-      "includeFiles": "{frontend/css/*.css,frontend/js/*.js,frontend/js/components/*.js,frontend/js/utils/*.js,frontend/data/demo_run.json}",
-      "memory": 1024,
-      "maxDuration": 30
+      "includeFiles": "{frontend/css/*.css,frontend/js/*.js,frontend/js/components/*.js,frontend/js/utils/*.js,frontend/data/demo_run.json}"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/(.+)",
-      "destination": "/api"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/assets/(.+)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=86400, immutable"
-        },
-        {
-          "key": "Content-Type",
-          "value": "text/javascript; charset=utf-8"
-        }
-      ]
-    },
-    {
-      "source": "/assets/css/(.+)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=86400, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/assets/data/(.+)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600"
-        }
-      ]
-    }
-  ]
+  }
 }
