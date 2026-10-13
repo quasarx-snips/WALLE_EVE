@@ -1,0 +1,39 @@
+[project]
+name = "walle-eve-signal"
+version = "0.1.0"
+description = "WALL-E and EVE's Signal — a Bayesian pursuit lab (Flask + NumPy, plain HTML/JS frontend)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "Flask>=3.0,<4.0",
+    "numpy>=1.26,<3.0",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[project.scripts]
+walle-eve = "app:entrypoint"
+
+[tool.setuptools]
+py-modules = ["app"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "W"]
+ ignore = ["E501"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

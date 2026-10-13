@@ -92,9 +92,8 @@ function entropyChart(series, meta) {
   return wrap(`
     <defs>
       <!-- Vertical fade so the area reads as "probability mass of uncertainty". -->
-      <linearGradient id="entropy-area" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#ff9a5e" stop-opacity="0.25"/>
-        <stop offset="100%" stop-color="#ff9a5e" stop-opacity="0.02"/>
+      <linearGradient id="entropy-area" x1="0" y1="0" x2="0" y2="1">          <stop offset="0%" stop-color="#e8895c" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#e8895c" stop-opacity="0.02"/>
       </linearGradient>
     </defs>
     ${grid}

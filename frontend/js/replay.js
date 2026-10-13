@@ -210,8 +210,8 @@ export class RunReplay {
     const svg =
       `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="Belief entropy falling from 0.87 to 0.00 over 20 steps">
         <defs><linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ff9a5e" stop-opacity="0.2"/>
-          <stop offset="100%" stop-color="#ff9a5e" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#e8895c" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#e8895c" stop-opacity="0"/>
         </linearGradient></defs>
         ${gridY}
         <path class="area" d="${area}"/>

@@ -35,11 +35,10 @@ export function actionTag(action) {
   return { tag: action.toUpperCase(), cls: 'tag-move' };
 }
 
-/** Theme colour for the action-panel status chip. */
+/** Theme colour for the action-panel status chip */
 export const statusChipColor = (status) => {
   if (status === 'eve_found') return '#3ddc97';
-  if (status === 'battery_depleted') return '#ff9a5e';
+  if (status === 'battery_depleted') return '#e8895c';
   if (status === 'time_expired') return '#f59e0b';
-  return '#ff9a5e';
+  return '#e8895c';
 };
-

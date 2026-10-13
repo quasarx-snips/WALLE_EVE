@@ -34,6 +34,13 @@ import threading
 import time
 from collections import OrderedDict
 
+def entrypoint():
+    """Convenience entry point callable used by `py walle-eve` and any tooling that
+    expects a single module-level callable. Delegates to the same Flask app the web
+    layer uses, so there is exactly one instance of the application object."""
+    return app
+
+
 import numpy as np
 from flask import Flask, jsonify, request, send_file, send_from_directory
 
