@@ -6,8 +6,10 @@
  * bundler, no build step. We just bootstrap the App once the DOM is ready.
  */
 import { App } from './App.js';
+import { initThemeToggle } from './theme-toggle.js';
 
 function boot() {
+  initThemeToggle();
   const root = document.getElementById('app');
   const app = new App(root);
   // Expose for debugging in the console (window.__walle); harmless in prod.

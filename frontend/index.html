@@ -11,6 +11,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Khand:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="/assets/css/landing.css?v=3">
 <link rel="stylesheet" href="/assets/css/figures.css?v=1">
+<link rel="stylesheet" href="/assets/css/light.css">
+<script>
+  // Day/night seed: apply the saved (or OS) theme before first paint — no flash.
+  (function () {
+    try {
+      var saved = localStorage.getItem('walle-eve-theme');
+      var theme = (saved === 'light' || saved === 'dark') ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+  })();
+</script>
 <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
@@ -30,6 +42,8 @@
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m0 0l-5.5-5.5M19 12l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4.5v14m0 0l-5-5m5 5l5-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" stroke="currentColor" stroke-width="1.4"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
 <nav class="nav" id="nav">
@@ -44,6 +58,10 @@
       <a href="#costs">Costs</a>
     </div>
     <div class="actions">
+      <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to day mode" title="Switch to day mode">
+        <svg class="icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+        <svg class="icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+      </button>
       <a class="btn btn--primary" href="/mission">Open mission control
         <svg class="arrow" width="15" height="15" aria-hidden="true"><use href="#i-arrow"></use></svg>
       </a>

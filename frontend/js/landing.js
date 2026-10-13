@@ -16,6 +16,7 @@ import { drawGrid } from './gridview.js';
 // page's numbers and the dashboard's numbers are the same quantities, so they
 // must not be drawn by two different pieces of code.
 import { reliabilityChart, rocChart, confusionChart } from './charts.js';
+import { initThemeToggle } from './theme-toggle.js';
 
 const SIMPLEX_CDN = 'https://cdn.jsdelivr.net/npm/simplex-noise@4.0.3/+esm';
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -557,6 +558,7 @@ async function boot() {
   // module graph actually executed. Set first so it's true even if a later step
   // (e.g. a blocked CDN for motion) degrades gracefully.
   window.__landingBooted = true;
+  initThemeToggle();
   const lenis = initSmoothScroll();
   if (lenis) window.__lenis = lenis;
   initNav();

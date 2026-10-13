@@ -11,6 +11,19 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Khand:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/assets/css/app.css">
 <link rel="stylesheet" href="/assets/css/figures.css">
+<link rel="stylesheet" href="/assets/css/light.css">
+<script>
+  // Day/night seed: apply the saved (or OS) theme before first paint — no flash.
+  // Shared logic lives in /assets/js/theme-toggle.js; this is the sync preamble.
+  (function () {
+    try {
+      var saved = localStorage.getItem('walle-eve-theme');
+      var theme = (saved === 'light' || saved === 'dark') ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+  })();
+</script>
 </head>
 <body>
 
@@ -77,6 +90,8 @@
   <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l8.5 15h-17z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9.5v4.2M12 16.4v.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
   <symbol id="i-matrix" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1" fill="currentColor"/></symbol>
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M11.6 3.9H20v8.4l-8.3 8.3a1.4 1.4 0 0 1-2 0l-6.4-6.4a1.4 1.4 0 0 1 0-2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="15.8" cy="8.2" r="1.5" fill="currentColor"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
 <div class="app" id="app">
@@ -90,6 +105,10 @@
       </div>
     </div>
     <div class="topbar-chips">
+      <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to day mode" title="Switch to day mode">
+        <svg class="icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+        <svg class="icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+      </button>
       <div class="chip">
         <span class="chip-label">status</span>
         <b class="chip-value" id="hdr-status">booting</b>

@@ -29,6 +29,7 @@ Thumbs.db
 
 # --- Generated at runtime (never committed) -------------------------------
 mission_trace.json
+__cc_docs.json
 
 # --- Vercel ---------------------------------------------------------------
 .vercel/

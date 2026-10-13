@@ -136,11 +136,11 @@ svg.sprite { display: none; }
 .grid {
   display: grid;
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
   grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(300px, 360px);
   grid-template-areas:
     'telemetry map   log'
-    'telemetry stats log'
+    'stats     stats log'
     'matrix    matrix log';
 }
 
@@ -150,12 +150,26 @@ svg.sprite { display: none; }
 [data-area='stats']     { grid-area: stats; }
 [data-area='matrix']    { grid-area: matrix; }
 
+/* Telemetry and map share row 1, so stretch makes them exactly equal height.
+   Telemetry distributes its extra space internally instead of leaving a gap. */
+[data-area='telemetry'],
+[data-area='map'] {
+  align-self: stretch;
+  height: 100%;
+  min-height: 100%;
+}
+[data-area='telemetry'] { justify-content: space-between; }
+[data-area='telemetry'] .bars { flex: 1 1 auto; justify-content: center; }
+[data-area='telemetry'] .tiles { margin-top: auto; }
+[data-area='log'] { align-self: stretch; }
+[data-area='log'] .log { flex: 1 1 auto; height: auto; min-height: clamp(280px, 48vh, 560px); }
+
 @media (max-width: 1360px) {
   .grid {
     grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
     grid-template-areas:
       'map    telemetry'
-      'stats  telemetry'
+      'stats  stats'
       'matrix matrix'
       'log    log';
   }
@@ -165,6 +179,10 @@ svg.sprite { display: none; }
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: 'map' 'telemetry' 'stats' 'matrix' 'log';
   }
+  [data-area='telemetry'],
+  [data-area='map'],
+  [data-area='log'] { height: auto; min-height: 0; }
+  [data-area='telemetry'] .tiles { margin-top: 0; }
 }
 
 .panel {
