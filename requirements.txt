@@ -1,0 +1,11 @@
+# Runtime dependencies for the WALL-E / EVE pursuit lab.
+#
+# Two packages, and deliberately no more: the simulation is numpy and the web
+# layer is Flask. The frontend has no build step at all, so nothing else is
+# needed to run the whole thing, locally or on Vercel.
+#
+# Ranges rather than exact pins: numpy ships wheels for every Python version the
+# platform runtime offers, and a hard pin is the usual cause of a build that
+# works on one machine and fails on a deploy target.
+Flask>=3.0,<4.0
+numpy>=1.26,<3.0

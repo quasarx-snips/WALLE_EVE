@@ -1,0 +1,83 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": [
+        "frontend/css/*.css",
+        "frontend/js/*.js",
+        "frontend/js/components/*.js",
+        "frontend/js/utils/*.js",
+        "frontend/data/demo_run.json"
+      ],
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/mission",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/assets/(.+)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/healthz",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/reset",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/step",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/report",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/(.+)",
+      "destination": "/api/index.py"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.+)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, immutable"
+        },
+        {
+          "key": "Content-Type",
+          "value": "text/javascript; charset=utf-8"
+        }
+      ]
+    },
+    {
+      "source": "/assets/css/(.+)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/data/(.+)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    }
+  ]
+}

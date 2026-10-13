@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WALL-E &amp; EVE — Bayesian search, in the open</title>
+<meta name="description" content="An autonomous grid-search agent that keeps a probability map over its target, prices every scan against the battery it costs, and shows the arithmetic behind every move.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23E8919C' stroke-width='2'/%3E%3Ccircle cx='12' cy='12' r='3.5' fill='%23E8919C'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Khand:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/css/landing.css?v=3">
+<link rel="stylesheet" href="/assets/css/figures.css?v=1">
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.3.26/dist/lenis.css">
+</head>
+<body>
+
+<div class="cursor" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="blob blob-1" aria-hidden="true"></div>
+<div class="blob blob-2" aria-hidden="true"></div>
+
+<svg class="sprite" aria-hidden="true" focusable="false" style="display:none">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5l12 7.5-12 7.5z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 4.5h3.4v15H7zM13.6 4.5H17v15h-3.4z" fill="currentColor"/></symbol>
+  <symbol id="i-step" viewBox="0 0 24 24"><path d="M6 4.5l9 7.5-9 7.5z" fill="currentColor"/><path d="M17 4.5h2.4v15H17z" fill="currentColor"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m0 0l-5.5-5.5M19 12l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4.5v14m0 0l-5-5m5 5l5-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3" stroke="currentColor" stroke-width="1.4"/></symbol>
+</svg>
+
+<nav class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <a class="wordmark" href="/">
+      <svg class="mark" aria-hidden="true"><use href="#i-mark"></use></svg>
+      <span>WALL-E <span class="mono" style="color:var(--text-3)">/</span> EVE</span>
+    </a>
+    <div class="nav-links">
+      <a href="#method">Method</a>
+      <a href="#run">The run</a>
+      <a href="#costs">Costs</a>
+    </div>
+    <div class="actions">
+      <a class="btn btn--primary" href="/mission">Open mission control
+        <svg class="arrow" width="15" height="15" aria-hidden="true"><use href="#i-arrow"></use></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <canvas id="flow" aria-hidden="true"></canvas>
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Bayesian pursuit · 14×14 grid · <b>run: seed 7 · 38 steps</b></p>
+      <h1 class="display">WALL-E doesn't know where EVE&nbsp;is.<br><em>It knows how much it doesn't know.</em></h1>        <p class="lede">
+        Every reading is noisy, every move burns battery, a scan costs three — and
+        EVE keeps moving. The agent carries a probability map over her cell,
+        propagates it through a motion model, corrects it with each observation,
+        and spends energy only where that map says the uncertainty is worth
+        resolving. Then it writes the arithmetic down.
+      </p>
+      <div class="actions">
+        <a class="btn btn--primary" href="/mission">Open mission control
+          <svg class="arrow" width="15" height="15" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </a>
+        <a class="btn" href="#run">
+          <svg width="14" height="14" aria-hidden="true"><use href="#i-down"></use></svg>
+          Replay the run
+        </a>
+      </div>
+      <p class="hint" style="margin-top:20px">
+        <span class="pulse" aria-hidden="true"></span>
+        The flow field behind this text is the prior. Your cursor is a sample.
+      </p>
+    </div>
+
+    <aside class="hero-aside" data-reveal>
+      <div class="stat"><b class="mono">0.88 → 0.00</b><span>belief entropy, 38 steps</span></div>
+      <div class="stat"><b class="mono">25 / 13 / 0</b><span>moves · scans · blocked</span></div>
+      <div class="stat"><b class="mono">(11,10)</b><span>inferred cell — correct</span></div>
+      <div class="stat"><b class="mono">2 decoys</b><span>beacons it has to out-think</span></div>
+      <p class="small">Numbers on this page are read from the recorded run in
+        <span class="mono">demo_run.json</span>, not typed by hand.</p>
+    </aside>
+  </div>
+</header>
+
+<div class="strip" aria-hidden="true">
+  <div class="marquee" id="marquee">
+    <!-- Replaced at runtime with one line per step of the recorded run. This
+         static copy is what a reader with no JavaScript sees. -->
+    <span><i>[000]</i> init — the opening reading puts the prior peak at (13,2) with 2%</span>
+    <span><i>[001]</i> scan — a bearing that points at a decoy tells you nothing about EVE</span>
+    <span><i>[038]</i> move_up — posterior collapsed to one cell; contact</span>
+  </div>
+</div>
+
+<section class="section" id="method">
+  <div class="wrap section-head">
+    <div>
+      <p class="eyebrow">The update</p>
+      <h2 class="h2">One update, four lines of arithmetic.</h2>
+    </div>
+    <div>
+      <p class="body">
+        There is no learned model here and no black box. Each step pushes the map
+        through a motion model, multiplies it by a likelihood, discounts the cell
+        the agent is standing on, and renormalises — so any single decision can be
+        reconstructed by hand. Scroll: the map on the right is the agent's real
+        posterior at five moments of the recorded run.
+      </p>
+    </div>
+  </div>
+
+  <div class="pin" id="method-pin">
+    <div class="wrap pin-stage">
+      <ol class="steps" id="method-steps">
+        <li class="step" data-stage="0">
+          <h3>1 · Prior</h3>
+          <p>Uniform over free cells, then narrowed by the opening bearing (±25°) and
+             strength. The first guess is loose on purpose — 2% at its best cell.</p>
+          <code class="formula">p₀ ∝ exp(−½·((s − e^(−d/5))/0.08)²)</code>
+        </li>
+        <li class="step" data-stage="1">
+          <h3>2 · Predict</h3>
+          <p>EVE is alive. The agent believes she takes one step to a free neighbour
+             with probability 0.10 (she actually does it 0.12 of the time), so the
+             belief is smeared across her possible neighbours before every reading.</p>
+          <code class="formula">p ← (1−q)·p + q·Σ p[x±1,y±1] / deg(x,y)</code>
+        </li>
+        <li class="step" data-stage="2">
+          <h3>3 · Likelihood</h3>
+          <p>The sensor reports the <em>strongest</em> source, and two known decoy
+             beacons emit too. Where a beacon already explains the reading, the
+             likelihood is flat — the honest way to say "that number was not about her".</p>
+          <code class="formula">L ∝ exp(−½·((s − max(e^(−d/5), decoy))/σ)²)  ·  σ = 0.17 / 0.09</code>
+        </li>
+        <li class="step" data-stage="3">
+          <h3>4 · Multiply, discount, renormalise</h3>
+          <p>Obstacles are zero. The cell WALL-E is standing on is discounted, not
+             zeroed — a target that can move is allowed to come back. Clues multiply
+             in a Gaussian of ±3 cells.</p>
+          <code class="formula">p ← p · L  ·  p[agent] ×= 0.06  ·  p ← p / Σp</code>
+        </li>
+        <li class="step" data-stage="4">
+          <h3>5 · Spend</h3>
+          <p>A* walks to the best-smoothed hypothesis. If charge can't cover the trip
+             back to a charged pad plus two scans, it turns back first; if two
+             hypotheses share the mass, it scans to buy a bearing.</p>
+          <code class="formula">reserve = path(station) + 2 × cost(scan)  ·  cost = 1 / 3</code>
+        </li>
+      </ol>
+
+      <figure class="frame">
+        <canvas id="method-canvas" width="640" height="640" role="img" aria-label="The agent's posterior over the grid at the current stage of the update"></canvas>
+        <div class="readouts">
+          <div class="readout"><span>entropy</span><b class="mono" id="readout-entropy">0.884</b></div>
+          <div class="readout"><span>peak cell</span><b class="mono" id="readout-peak">(13,2)</b></div>
+          <div class="readout"><span>battery</span><b class="mono" id="readout-battery">90</b></div>
+        </div>
+        <figcaption class="frame-foot">
+          <span id="method-step-label">frame 0 · init</span>
+          <b id="method-note">prior from the initial signal</b>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="run">
+  <div class="wrap section-head">
+    <div>
+      <p class="eyebrow">The evidence</p>
+      <h2 class="h2">A run you can audit, not a screenshot.</h2>
+    </div>
+    <div>
+      <p class="body">
+        Seed 7's actual run, recorded frame by frame: the posterior after every
+        observation, the battery it cost, and the sentence the planner wrote to
+        justify the action. Scrub it, or let it play — the ledger on the right is
+        the same trace the dashboard streams live.
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap replay">
+    <div>
+      <figure class="frame">
+        <canvas id="replay-canvas" width="640" height="640" role="img" aria-label="Replay of the recorded run: posterior heatmap, agent path and recharge stations"></canvas>
+        <div class="transport">
+          <button class="tbtn" id="replay-play" type="button" aria-label="Play or pause the replay">
+            <svg aria-hidden="true"><use href="#i-play" id="replay-icon"></use></svg>
+          </button>
+          <button class="tbtn" id="replay-step" type="button" aria-label="Advance one frame">
+            <svg aria-hidden="true"><use href="#i-step"></use></svg>
+          </button>
+          <div class="scrub">
+            <input id="replay-scrub" type="range" min="0" max="38" value="0" step="1" aria-label="Scrub the recorded run">
+            <span class="counter" id="replay-counter">step 0 / 38</span>
+          </div>
+        </div>
+        <figcaption class="frame-foot">
+          <span id="replay-action">init</span>
+          <b id="replay-entropy">entropy 0.884</b>
+        </figcaption>
+      </figure>
+    </div>
+
+    <div>
+      <div class="ledger">
+        <div class="ledger-head"><span>step</span><span>action</span><span>battery</span><span>why</span></div>
+        <div class="ledger-body" id="ledger-body"></div>
+      </div>
+      <p class="small" style="margin-top:14px" id="run-note">
+        39 trace entries · EVE found at (11,10) · inferred (11,10) with 100% confidence · 26 battery left.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="costs">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">The economy</p>
+        <h2 class="h2">Information is the scarce resource.</h2>
+      </div>
+      <div>
+        <p class="body">
+          Battery is the only currency and it never comes back by itself. A blocked
+          move costs the same as a good one, which is why the planner carries a
+          reserve instead of an optimism.
+        </p>
+      </div>
+    </div>      <div class="costs">
+        <div class="cost-row"><span>move</span><span class="mono">−1</span><span class="mono">×25</span><span class="note">any of four neighbours; bumping a wall still bills you</span></div>
+        <div class="cost-row"><span>scan</span><span class="mono">−3</span><span class="mono">×13</span><span class="note">the only action that returns a bearing — the ambiguity killer, when a decoy isn't louder</span></div>
+        <div class="cost-row"><span>recharge</span><span class="mono">+20</span><span class="mono">×0</span><span class="note">three charged pads; the route back must stay affordable at all times</span></div>
+        <div class="cost-row"><span>clue pickup</span><span class="mono">0</span><span class="mono">×0</span><span class="note">free, and worth a Gaussian of ±3 cells around EVE</span></div>
+        <div class="cost-row is-total"><span>this run</span><span class="mono">−64</span><span class="mono">38/300</span><span class="note">26 battery and 262 steps to spare when contact was made</span></div>
+      </div>
+  </div>
+</section>
+
+<section class="section" id="scores">
+  <div class="wrap section-head">
+    <div>
+      <p class="eyebrow">The scoreboard</p>
+      <h2 class="h2">Scored against a truth it cannot see.</h2>
+    </div>
+    <div>
+      <p class="body">
+        "The belief converged" is a claim, so here it is as numbers. The same run
+        above is marked against EVE's real cell after every step: how much
+        probability the filter put on the truth, how well it ranked every cell,
+        how much each reading actually bought in nats, and whether it knew when it
+        was close. These are report cards, never inputs — the agent has no access
+        to any of them while it is searching.
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="score-grid" id="score-grid">
+      <!-- Real numbers, read from the recorded outcome; the placeholders below
+           are what a no-JavaScript reader sees. -->
+      <div class="score" data-score="auc"><b class="mono">0.959</b><span>ROC-AUC</span><small>How well posterior mass ranks EVE's real cell, over every scored cell of the run.</small></div>
+      <div class="score" data-score="log_loss"><b class="mono">2.80</b><span>log loss (nats)</span><small>Mean −log p at her true cell. A filter that knew nothing would sit at about 5.1.</small></div>
+      <div class="score" data-score="brier"><b class="mono">0.005</b><span>Brier score</span><small>Mean squared error of the question "is she in this cell?", over all 160 free cells.</small></div>
+      <div class="score" data-score="topk"><b class="mono">46% / 59%</b><span>top-1 / top-3</span><small>How often the single best cell, or one of the best three, actually held her.</small></div>
+      <div class="score" data-score="detect"><b class="mono">1.00 / 0.88</b><span>precision / recall</span><small>"Am I within one cell?" — it was never wrong when it said yes, and missed one.</small></div>
+      <div class="score" data-score="credible"><b class="mono">70 → 1 cells</b><span>90% credible set</span><small>The smallest group of cells holding 90% of the belief, first step to last. It only got there because it kept scanning.</small></div>
+    </div>
+  </div>
+
+  <div class="wrap score-figs">
+    <figure class="frame">
+      <div class="frame-foot"><span>calibration · trust vs hit rate</span><b class="mono" id="calib-note">39 steps</b></div>
+      <div class="fig" id="calib-fig"></div>
+      <figcaption class="frame-foot"><span>on the dashed diagonal = honest</span><span>dot area = steps in that bin</span></figcaption>
+      <p class="small">The safest bin is also the fullest: most of the run it was correctly unsure. The dots above the diagonal are where it hesitated when it should not have.</p>
+    </figure>
+    <figure class="frame">
+      <div class="frame-foot"><span>ranking · ROC over every cell</span><b class="mono" id="roc-note">AUC —</b></div>
+      <div class="fig" id="roc-fig"></div>
+      <figcaption class="frame-foot"><span>dashed = knows nothing</span><span>cyan = this run</span></figcaption>
+      <p class="small">One curve from 6 200 scored cells: each is a step's belief about a cell, labelled by whether that cell was really hers.</p>
+    </figure>
+    <figure class="frame">
+      <div class="frame-foot"><span>detection · within one cell?</span><b class="mono">threshold 0.50</b></div>
+      <div class="fig" id="cm-fig"></div>
+      <figcaption class="frame-foot"><span>7 true detections · 1 missed</span><span>0 false alarms</span></figcaption>
+      <p class="small">A falsifiable claim the agent makes on every step: does my own neighbourhood hold half the probability? Counted against reality.</p>
+    </figure>
+  </div>
+</section>
+
+<section class="section" id="control">
+  <div class="wrap asym">
+    <div>
+      <p class="eyebrow">The instrument</p>
+      <h2 class="h2" style="margin-bottom:18px">Then open the thing that did it.</h2>
+      <p class="body" style="margin-bottom:24px">
+        The dashboard runs the same pursuit live: step it, auto-run it, randomise
+        EVE with a seed you control, crank the threat level from calm to pursuit,
+        and read the prior / likelihood / posterior matrices as they are rewritten.
+        It is plain HTML, CSS and JavaScript served by the same Flask process as the
+        API — no bundler, no npm install.
+      </p>
+      <div class="actions">
+        <a class="btn btn--primary" href="/mission">Open mission control
+          <svg class="arrow" width="15" height="15" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </a>
+        <a class="btn" href="#run">Back to the replay</a>
+      </div>
+      <div class="close-list" style="margin-top:30px">
+        <div class="close-item"><b>Belief heatmap</b><span>Posterior, the 90% credible set, the particle cloud, decoy beacons and clue σ rings</span></div>
+        <div class="close-item"><b>Posterior algebra</b><span>Prior, likelihood and posterior as readable numeric matrices</span></div>
+        <div class="close-item"><b>Evaluation</b><span>Entropy, information gain, calibration, ROC and the detection matrix</span></div>
+        <div class="close-item"><b>Telemetry &amp; trace</b><span>Battery, budget, spend, a colour-coded reasoning log and a JSON briefing</span></div>
+      </div>
+    </div>
+
+    <div>
+      <figure class="frame">
+        <div class="frame-foot"><span>belief entropy · seed 7</span><b id="spark-end">0.00</b></div>
+        <div id="spark"></div>
+        <figcaption class="frame-foot"><span>uniform → certain</span><span>1.00 is "no idea"</span></figcaption>
+      </figure>
+      <p class="small" style="margin-top:12px">
+        Drawn from the same 39 frames as the replay. The two plateaus are the
+        moments the filter had nothing new to chew on.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="close">
+  <div class="wrap close-card" data-reveal>
+    <p class="eyebrow">Start a mission</p>
+    <h2 class="h2">Pick a seed. Watch the uncertainty collapse.</h2>
+    <p class="body">
+      Leave EVE where she is and step through it, or randomise her position and
+      re-run with the seed printed in the header. Every mission writes its own
+      trace and briefing.
+    </p>
+    <div class="actions">
+      <a class="btn btn--primary" href="/mission">Open mission control
+        <svg class="arrow" width="15" height="15" aria-hidden="true"><use href="#i-arrow"></use></svg>
+      </a>
+      <button class="btn" id="replay-again" type="button">Replay the recorded run</button>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <span>Flask + NumPy · grid Bayes filter and a 400-particle sequential Monte Carlo over the same model.</span>
+    <span>Motion: GSAP + Lenis + simplex-noise (pinned CDN builds, progressive enhancement only). <a href="#method">Method</a> · <a href="#run">Run</a> · <a href="#scores">Scores</a> · <a href="/mission">Mission control</a></span>
+  </div>
+</footer>
+
+<!-- Plain (non-module) guard: ES `import` + fetch to /assets/* ONLY work when
+     this page is served by the Flask process. If it's opened as a local file
+     (file://, e.g. double-clicked), those are blocked and the page stays blank.
+     Detect that up front and show a clear instruction instead. -->
+<script>
+  (function () {
+    function showBanner(title, lines) {
+      var box = document.createElement('div');
+      box.setAttribute('data-boot-guard', '');
+      box.style.cssText =
+        'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;' +
+        'background:rgba(10,10,10,0.97);color:#ffffff;font-family:Inter,system-ui,sans-serif;padding:24px;';
+      box.innerHTML =
+        '<div style="max-width:640px;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:28px 30px;' +
+        'background:#121214;box-shadow:0 30px 80px rgba(0,0,0,.6)">' +
+        '<h1 style="margin:0 0 6px;font-size:22px;color:#ff9a5e">' + title + '</h1>' +
+        '<div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;line-height:1.7;color:rgba(255,255,255,0.6)">' +
+        lines.join('<br>') + '</div></div>';
+      document.body.appendChild(box);
+    }
+    if (location.protocol === 'file:') {
+      document.addEventListener('DOMContentLoaded', function () {
+        showBanner('Start the server to run this page', [
+          'This page was opened as a local file (file://).',
+          "Browsers block the page's modules and data loading from file://.",
+          '',
+          '1) Open a terminal in the project folder',
+          '2) Run:  py app.py',
+          '3) Open: http://127.0.0.1:5000/',
+        ]);
+      });
+      return;
+    }
+    // If the module app never booted ~8s after load, explain how to run it.
+    setTimeout(function () {
+      if (!window.__landingBooted) {
+        showBanner('Page did not start', [
+          'The page loaded but its scripts did not boot.',
+          '',
+          'Make sure the Flask server is running:',
+          '   py app.py',
+          'then open http://127.0.0.1:5000/ in your browser.',
+        ]);
+      }
+    }, 8000);
+  })();
+</script>
+
+<script type="module" src="/assets/js/landing.js"></script>
+<script type="module" src="/assets/js/cursor.js"></script>
+<script type="module" src="/assets/js/fx.js"></script>
+</body>
+</html>

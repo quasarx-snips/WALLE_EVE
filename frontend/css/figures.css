@@ -1,0 +1,96 @@
+/* =============================================================================
+   figures.css — chart primitives shared by the landing page and the dashboard.
+   -----------------------------------------------------------------------------
+   The figures themselves are generated as SVG strings by frontend/js/charts.js.
+   This file is only their skin. It is loaded by BOTH pages, so the recorded
+   scoreboard on the landing page and the live evaluation panel on the dashboard
+   are guaranteed to look like the same instrument.
+
+   Everything here is driven by CSS custom properties, and both pages define the
+   same token names, so one stylesheet skins two palettes.
+   ========================================================================== */
+
+/* Layout: a responsive mosaic; `--wide` figures take the whole row. */
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(272px, 1fr)); gap: 12px; }
+.chart--wide { grid-column: 1 / -1; }
+
+.chart { display: flex; flex-direction: column; gap: 6px; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-cap {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  font-size: 10.5px; color: var(--text-2);
+}
+.chart-cap b { color: var(--text); font-size: 11px; }
+
+/* Axes and grid. Labels are intentionally tiny: they are reference marks, not
+   reading material — the headline numbers live in the captions. */
+.chart-axis { fill: var(--text-3); font: 400 9px var(--font-mono); }
+.chart-gridline { stroke: var(--border-subtle); stroke-width: 1; }
+.chart-value { fill: var(--text); font: 600 11px var(--font-mono); }
+
+/* Lines and areas. Orange = belief/uncertainty, cyan = evidence/information. */
+.chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart-area { fill: url(#entropy-area); stroke: none; }
+.chart-line--gain { stroke: var(--accent-cyan); }
+.chart-area--gain { fill: url(#gain-area); }
+.chart-mean { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 3; }
+
+.chart-marker { fill: var(--accent); }
+.chart-marker-ring {
+  fill: none; stroke: var(--accent-border); stroke-width: 1.4;
+  animation: pulse-ring 1.8s ease-in-out infinite;
+  transform-box: fill-box; transform-origin: center;
+}
+
+/* Reliability diagram + ROC: the dashed diagonal is the "knows nothing" case. */
+.reliability-ideal { stroke: var(--border); stroke-width: 1; stroke-dasharray: 4 4; }
+.reliability-dot { fill: rgba(248, 104, 0, 0.5); stroke: var(--accent); stroke-width: 1.2; }
+.roc-line { fill: none; stroke: var(--accent-cyan); stroke-width: 1.8; stroke-linejoin: round; }
+
+/* Radar. */
+.radar-grid { fill: none; stroke: var(--border); stroke-width: 1; }
+.radar-spoke { stroke: var(--border-subtle); stroke-width: 1; }
+.radar-poly { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; }
+.radar-dot { fill: var(--accent); }
+.radar-label { fill: var(--text-2); font: 500 9px var(--font-mono); letter-spacing: 0.03em; }
+
+/* Detection confusion matrix. A DOM grid rather than SVG, because the cells hold
+   text that has to stay selectable and reflow with the panel. */
+.cm { display: grid; grid-template-columns: 84px repeat(2, minmax(0, 1fr)); gap: 5px; align-items: stretch; }
+.cm-head, .cm-side, .cm-corner {
+  display: flex; align-items: center;
+  font: 500 9px/1.3 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.cm-side { justify-content: flex-end; text-align: right; padding-right: 4px; }
+.cm-head { justify-content: center; }
+.cm-cell {
+  position: relative; overflow: hidden; display: grid; gap: 1px;
+  padding: 9px 10px;
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.cm-cell b { font-size: 16px; font-weight: 600; color: var(--text); }
+.cm-cell span { font-size: 9.5px; color: var(--text-3); }
+/* The thin bar under each cell is its share of all scored steps. */
+.cm-cell i { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--accent); opacity: 0.5; }
+.cm-tp { border-color: rgba(61, 220, 151, 0.3); }
+.cm-tp i { background: var(--success); }
+.cm-fn { border-color: rgba(255, 210, 138, 0.25); }
+.cm-fn i { background: var(--warning); }
+.cm-fp { border-color: var(--error-border); }
+.cm-fp i { background: var(--error); }
+.cm-tn i { background: var(--text-3); }
+.cm-foot { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 10.5px; color: var(--text-3); }
+.cm-foot b { color: var(--text); }
+
+/* Score tiles used by the landing page's scoreboard. */
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.score {
+  display: grid; gap: 4px; padding: 14px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface);
+}
+.score b { font: 600 1.7rem/1 var(--font-display); letter-spacing: 0.01em; }
+.score span { font: 500 0.625rem/1.4 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.score small { font-size: 0.75rem; color: var(--text-2); line-height: 1.45; }
